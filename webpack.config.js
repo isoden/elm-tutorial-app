@@ -32,6 +32,7 @@ var commonConfig = {
         extensions: ['.js', '.elm'],
         modules: ['node_modules']
     },
+    mode: process.env.WEBPACK_SERVE ? 'development' : 'production',
     module: {
         noParse: /\.elm$/,
         rules: [{
@@ -49,23 +50,21 @@ var commonConfig = {
             template: 'src/static/index.html',
             inject: 'body',
             filename: 'index.html'
-        })
+        }),
+        new CopyWebpackPlugin([{
+            from: 'src/static/img/',
+            to: 'static/img/'
+        }, {
+            from: 'src/favicon.ico'
+        }]),
+
     ]
 }
 
 // additional webpack settings for local env (when invoked by 'npm start')
 if (isDev === true) {
     module.exports = merge(commonConfig, {
-        entry: [
-            'webpack-dev-server/client?http://localhost:8080',
-            entryPath
-        ],
-        devServer: {
-            // serve index.html in place of 404 responses
-            historyApiFallback: true,
-            contentBase: './src',
-            hot: true
-        },
+        entry: entryPath,
         module: {
             rules: [{
                 test: /\.elm$/,
@@ -108,13 +107,6 @@ if (isProd === true) {
                 filename: 'static/css/[name]-[hash].css',
                 allChunks: true,
             }),
-            new CopyWebpackPlugin([{
-                from: 'src/static/img/',
-                to: 'static/img/'
-            }, {
-                from: 'src/favicon.ico'
-            }]),
-
             // extract CSS into a separate file
             // minify & mangle JS/CSS
             new webpack.optimize.UglifyJsPlugin({
